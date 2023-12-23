@@ -84,7 +84,7 @@ Alternatively, available keys can also be queried from the walletd wallet servic
 curl -d '{"jsonrpc":"2.0","id":1,"method":"exportOutputs","params":{"address":"<WALLET_ADDRESS"}}' http://localhost:8070/json_rpc
 ```
 
-Keydata is returned in the field 'message', which contains the binary file data.
+In this case, the returned json field 'message' contains the binary file data for 'keys.bin'
 
 ### 3.2 Create & sign a transaction on your offline signature machine
 
