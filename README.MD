@@ -78,6 +78,13 @@ export_to_offline keys.bin
 
 This generates the file 'keys.bin' containing your spendable output keys.
 
+Alternatively, available keys can also be queried from the walletd wallet service:
+
+```
+curl -d '{"jsonrpc":"2.0","id":1,"method":"exportOutputs","params":{"address":"<WALLET_ADDRESS"}}' http://localhost:8070/json_rpc
+```
+
+Keydata is returned in the field 'message', which contains the binary file data.
 
 ### 3.2 Create & sign a transaction on your offline signature machine
 
