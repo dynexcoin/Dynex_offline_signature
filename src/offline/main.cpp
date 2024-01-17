@@ -472,7 +472,7 @@ std::cout << "extraString: " << Common::podToHex(extraString) << std::endl;
 		  std::cout << "output - target key : " << Common::podToHex(out_eph_public_key) << std::endl;
 
 		  // output: change
-		  if (summary_inputs_money>amount) {
+		  if (summary_inputs_money > (amount+fee)) {
 		  		uint64_t change = summary_inputs_money - amount - fee;
 		  		Crypto::KeyDerivation derivation2;
 				  Crypto::PublicKey out_eph_public_key2;
