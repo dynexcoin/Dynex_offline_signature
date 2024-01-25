@@ -48,7 +48,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <nvml.h>
+//#include <nvml.h>
 #include <assert.h>
 #include <iomanip>
 #include <cstring>
@@ -223,6 +223,63 @@ KeyPair generateKeyPair() {
 	return k;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// paymentid functions
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool parsePaymentId(const std::string& paymentIdString, Crypto::Hash& paymentId) {
+  return Common::podFromHex(paymentIdString, paymentId);
+}
+
+bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const BinaryArray& extra_nonce) {
+  if (extra_nonce.size() > TX_EXTRA_NONCE_MAX_COUNT) {
+    return false;
+  }
+
+  size_t start_pos = tx_extra.size();
+  tx_extra.resize(tx_extra.size() + 2 + extra_nonce.size());
+  //write tag
+  tx_extra[start_pos] = TX_EXTRA_NONCE;
+  //write len
+  ++start_pos;
+  tx_extra[start_pos] = static_cast<uint8_t>(extra_nonce.size());
+  //write data
+  ++start_pos;
+  memcpy(&tx_extra[start_pos], extra_nonce.data(), extra_nonce.size());
+  return true;
+}
+
+void setPaymentIdToTransactionExtraNonce(std::vector<uint8_t>& extra_nonce, const Crypto::Hash& payment_id) {
+  extra_nonce.clear();
+  extra_nonce.push_back(TX_EXTRA_NONCE_PAYMENT_ID);
+  const uint8_t* payment_id_ptr = reinterpret_cast<const uint8_t*>(&payment_id);
+  std::copy(payment_id_ptr, payment_id_ptr + sizeof(payment_id), std::back_inserter(extra_nonce));
+}
+
+std::string convertPaymentId(const std::string& paymentIdString) {
+  if (paymentIdString.empty()) {
+    return "";
+  }
+
+  Crypto::Hash paymentId;
+  if (!parsePaymentId(paymentIdString, paymentId)) {
+    std::stringstream errorStr;
+    errorStr << "Payment id has invalid format: \"" + paymentIdString + "\", expected 64-character string";
+    throw std::runtime_error(errorStr.str());
+  }
+
+  std::vector<uint8_t> extra;
+  DynexCN::BinaryArray extraNonce;
+  setPaymentIdToTransactionExtraNonce(extraNonce, paymentId);
+  if (!addExtraNonceToTransactionExtra(extra, extraNonce)) {
+    std::stringstream errorStr;
+    errorStr << "Something went wrong with payment_id. Please check its format: \"" + paymentIdString + "\", expected 64-character string";
+    throw std::runtime_error(errorStr.str());
+  }
+
+  return std::string(extra.begin(), extra.end());
+}
+
 bool sign_transfer(const std::string address, const uint64_t amount, const std::string paymentid, const std::string keyfile, const std::string outfile, const std::string secretvk, const std::string publicvk, const std::string secretsk, const std::string publicsk, const uint64_t fee) {
 
   // convert keys to key format:
@@ -328,8 +385,11 @@ bool sign_transfer(const std::string address, const uint64_t amount, const std::
 		  KeyPair txkey = generateKeyPair();
 		  tx_key = txkey.secretKey;
 
-			// extra:
+		  // extra:
 		  std::string extraString;
+		  
+		  // paymentId?
+		  extraString = convertPaymentId(paymentid);
 
 		  // public key:
 		  extraString.append(sizeof(char), TX_EXTRA_TAG_PUBKEY);
@@ -342,7 +402,8 @@ bool sign_transfer(const std::string address, const uint64_t amount, const std::
 		    extraString.append(sizeof(char), spendPublicKey.data[i]);  
 		  for (int i=0; i<32; i++)
 		    extraString.append(sizeof(char), viewPublicKey.data[i]); 
-std::cout << "extraString: " << Common::podToHex(extraString) << std::endl;
+		
+		  std::cout << "extraString: " << Common::podToHex(extraString) << std::endl;
 		  
 		  // to_address:
 		  extraString.append(sizeof(char), TX_EXTRA_TO_ADDRESS);
