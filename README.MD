@@ -111,7 +111,12 @@ The transfer has been sent and will become available after 8 block confirmations
 Alternatively can the created transaction (tx_as_hex) also be sent directly to the Dynex node using 
 
 ```
-curl -X POST -i -H 'Accept: application/json' -d '{"params": {"tx_as_hex":"<TX_AS_HEX>"},"jsonrpc": "2.0", "id":"1"}' http://node.dynexcoin.org:18333/sendrawtransaction
+curl --request POST \
+--url http://node.dynexcoin.org:18333/sendrawtransaction
+--header 'Content-Type: application/json'
+--header 'User-Agent: insomnia/8.5.1* \
+--data '{
+"tx_as_hex":"<RAW_HEX_DATA"}'
 ``` 
 
 
