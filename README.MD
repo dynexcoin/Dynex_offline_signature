@@ -112,8 +112,8 @@ Alternatively can the created transaction (tx_as_hex) also be sent directly to t
 
 ```
 curl --request POST \
---url http://node.dynexcoin.org:18333/sendrawtransaction
---header 'Content-Type: application/json'
+--url http://node.dynexcoin.org:18333/sendrawtransaction \
+--header 'Content-Type: application/json' \
 --header 'User-Agent: insomnia/8.5.1* \
 --data '{"tx_as_hex":"<RAW_HEX_DATA"}'
 ``` 
